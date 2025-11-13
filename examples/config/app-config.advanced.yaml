@@ -1,0 +1,130 @@
+# Advanced app-config.yaml for RHDH
+#
+# This configuration includes GitHub integration, PostgreSQL, and custom templates
+
+app:
+  title: Red Hat Developer Hub - Development
+  baseUrl: http://localhost:7007
+
+organization:
+  name: My Organization
+
+backend:
+  baseUrl: http://localhost:7007
+  listen:
+    port: 7007
+    host: 0.0.0.0
+  
+  cors:
+    origin: http://localhost:7007
+    methods: [GET, HEAD, PATCH, POST, PUT, DELETE]
+    credentials: true
+  
+  csp:
+    connect-src: ["'self'", 'http:', 'https:']
+    upgrade-insecure-requests: false
+  
+  # PostgreSQL database configuration
+  database:
+    client: pg
+    connection:
+      host: ${POSTGRES_HOST}
+      port: ${POSTGRES_PORT}
+      user: ${POSTGRES_USER}
+      password: ${POSTGRES_PASSWORD}
+      database: ${POSTGRES_DB}
+      ssl:
+        rejectUnauthorized: false
+  
+  cache:
+    store: memory
+
+# GitHub integration
+integrations:
+  github:
+    - host: github.com
+      token: ${GITHUB_TOKEN}
+      # Optional: Configure for GitHub Enterprise
+      # apiBaseUrl: https://api.github.com
+      # rawBaseUrl: https://raw.githubusercontent.com
+
+# Catalog configuration
+catalog:
+  rules:
+    - allow: [Component, System, API, Resource, Location, Template, Group, User]
+  
+  # GitHub provider for automatic discovery
+  providers:
+    github:
+      providerId:
+        organization: ${GITHUB_ORG}
+        catalogPath: '/catalog-info.yaml'
+        filters:
+          branch: 'main'
+          repository: '.*'
+        schedule:
+          frequency: { minutes: 30 }
+          timeout: { minutes: 3 }
+  
+  locations:
+    # Local templates
+    - type: file
+      target: /opt/app-root/src/templates/template-1/template.yaml
+      rules:
+        - allow: [Template]
+    
+    - type: file
+      target: /opt/app-root/src/templates/template-2/template.yaml
+      rules:
+        - allow: [Template]
+    
+    # Remote templates
+    - type: url
+      target: https://github.com/backstage/software-templates/blob/main/scaffolder-templates/react-ssr-template/template.yaml
+      rules:
+        - allow: [Template]
+
+# Scaffolder configuration
+scaffolder:
+  defaultAuthor:
+    name: ${SCAFFOLDER_AUTHOR_NAME:-RHDH Scaffolder}
+    email: ${SCAFFOLDER_AUTHOR_EMAIL:-scaffolder@example.com}
+  defaultCommitMessage: 'Scaffolded from RHDH'
+
+# TechDocs configuration
+techdocs:
+  builder: 'local'
+  generator:
+    runIn: 'local'
+  publisher:
+    type: 'local'
+
+# Authentication with GitHub OAuth
+auth:
+  environment: development
+  providers:
+    # Guest authentication (for development)
+    guest: {}
+    
+    # GitHub OAuth
+    github:
+      development:
+        clientId: ${GITHUB_CLIENT_ID}
+        clientSecret: ${GITHUB_CLIENT_SECRET}
+        signIn:
+          resolvers:
+            - resolver: usernameMatchingUserEntityName
+            - resolver: emailMatchingUserEntityProfileEmail
+
+# Permission system (disabled for development)
+permission:
+  enabled: false
+
+# Proxy configuration for external services
+proxy:
+  endpoints:
+    # Example: Proxy for external API
+    # '/api-name':
+    #   target: 'https://api.example.com'
+    #   headers:
+    #     Authorization: 'Bearer ${API_TOKEN}'

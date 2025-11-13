@@ -1,0 +1,71 @@
+# Basic app-config.yaml for RHDH Local Development
+#
+# This is a minimal configuration for running RHDH locally with Podman
+# Copy this file to ~/rhdh-config/app-config.yaml and customize as needed
+
+app:
+  title: Red Hat Developer Hub - Local
+  baseUrl: http://localhost:7007
+
+organization:
+  name: My Organization
+
+backend:
+  baseUrl: http://localhost:7007
+  listen:
+    port: 7007
+    host: 0.0.0.0
+  
+  # CORS configuration
+  cors:
+    origin: http://localhost:7007
+    methods: [GET, HEAD, PATCH, POST, PUT, DELETE]
+    credentials: true
+  
+  # CSP configuration
+  csp:
+    connect-src: ["'self'", 'http:', 'https:']
+    upgrade-insecure-requests: false
+  
+  # Database - using in-memory for development
+  database:
+    client: better-sqlite3
+    connection: ':memory:'
+  
+  # Cache
+  cache:
+    store: memory
+
+# Catalog configuration
+catalog:
+  rules:
+    - allow: [Component, System, API, Resource, Location, Template, Group, User]
+  
+  # Register your templates here
+  locations:
+    # Example: Local file templates
+    # - type: file
+    #   target: /path/to/template-1/template.yaml
+    #   rules:
+    #     - allow: [Template]
+    
+    # Example: Remote templates
+    # - type: url
+    #   target: https://github.com/backstage/backstage/blob/master/packages/catalog-model/examples/all.yaml
+
+# Scaffolder configuration
+scaffolder:
+  defaultAuthor:
+    name: RHDH User
+    email: user@example.com
+  defaultCommitMessage: 'Initial commit from RHDH scaffolder'
+
+# Authentication - Guest mode for local development
+auth:
+  environment: development
+  providers:
+    guest: {}
+
+# Disable permissions for development
+permission:
+  enabled: false

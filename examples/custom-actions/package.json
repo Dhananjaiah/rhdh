@@ -1,0 +1,40 @@
+{
+  "name": "scaffolder-backend-module-custom-actions",
+  "version": "1.0.0",
+  "description": "Custom scaffolder actions for RHDH including template triggering",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "clean": "rm -rf dist",
+    "test": "jest",
+    "lint": "eslint src --ext .ts"
+  },
+  "keywords": [
+    "backstage",
+    "rhdh",
+    "scaffolder",
+    "custom-actions"
+  ],
+  "author": "RHDH Team",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@backstage/backend-common": "^0.21.0",
+    "@backstage/backend-plugin-api": "^0.6.10",
+    "@backstage/plugin-scaffolder-node": "^0.4.0",
+    "@backstage/catalog-client": "^1.6.0",
+    "@backstage/catalog-model": "^1.4.0",
+    "@backstage/config": "^1.1.0",
+    "node-fetch": "^2.7.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "@types/node-fetch": "^2.6.0",
+    "typescript": "^5.0.0",
+    "jest": "^29.0.0",
+    "@types/jest": "^29.0.0",
+    "ts-jest": "^29.0.0"
+  }
+}
