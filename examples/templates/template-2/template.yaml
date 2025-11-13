@@ -1,0 +1,81 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: template-2-service
+  title: Dependent Service Template
+  description: Creates a microservice (can be triggered from other templates)
+  tags:
+    - nodejs
+    - microservice
+    - dependent
+    - example
+spec:
+  owner: platform-team
+  type: service
+  
+  parameters:
+    - title: Service Details
+      required:
+        - name
+        - description
+      properties:
+        name:
+          title: Service Name
+          type: string
+          description: Name of the service
+          pattern: '^[a-z0-9-]+$'
+        description:
+          title: Description
+          type: string
+          description: Description of the service
+        parentApp:
+          title: Parent Application
+          type: string
+          description: Name of the parent application (if triggered from another template)
+          ui:widget: hidden
+    
+    - title: Repository Configuration
+      required:
+        - repoUrl
+      properties:
+        repoUrl:
+          title: Repository Location
+          type: string
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts:
+              - github.com
+
+  steps:
+    - id: fetch-base
+      name: Fetch Service Template
+      action: fetch:template
+      input:
+        url: ./skeleton
+        values:
+          name: ${{ parameters.name }}
+          description: ${{ parameters.description }}
+          parentApp: ${{ parameters.parentApp }}
+    
+    - id: publish-service
+      name: Publish Service
+      action: publish:github
+      input:
+        repoUrl: ${{ parameters.repoUrl }}
+        description: ${{ parameters.description }}
+        defaultBranch: main
+    
+    - id: register-service
+      name: Register Service
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps['publish-service'].output.repoContentsUrl }}
+        catalogInfoPath: '/catalog-info.yaml'
+  
+  output:
+    links:
+      - title: Repository
+        url: ${{ steps['publish-service'].output.remoteUrl }}
+      - title: Open in catalog
+        icon: catalog
+        entityRef: ${{ steps['register-service'].output.entityRef }}

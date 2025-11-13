@@ -1,0 +1,96 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: template-1-main
+  title: Main Application Template
+  description: Creates a main application and triggers dependent service creation
+  tags:
+    - nodejs
+    - microservice
+    - example
+spec:
+  owner: platform-team
+  type: service
+  
+  parameters:
+    - title: Application Details
+      required:
+        - name
+        - description
+      properties:
+        name:
+          title: Application Name
+          type: string
+          description: Name of the application
+          ui:autofocus: true
+          pattern: '^[a-z0-9-]+$'
+        description:
+          title: Description
+          type: string
+          description: Description of the application
+        createDependentService:
+          title: Create Dependent Service
+          type: boolean
+          description: Should we create a dependent microservice?
+          default: true
+    
+    - title: Repository Configuration
+      required:
+        - repoUrl
+      properties:
+        repoUrl:
+          title: Repository Location
+          type: string
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts:
+              - github.com
+
+  steps:
+    - id: fetch-base
+      name: Fetch Base Template
+      action: fetch:template
+      input:
+        url: ./skeleton
+        values:
+          name: ${{ parameters.name }}
+          description: ${{ parameters.description }}
+    
+    - id: publish-main
+      name: Publish Main Application
+      action: publish:github
+      input:
+        repoUrl: ${{ parameters.repoUrl }}
+        description: ${{ parameters.description }}
+        defaultBranch: main
+    
+    - id: trigger-dependent-service
+      name: Trigger Dependent Service Creation
+      if: ${{ parameters.createDependentService }}
+      action: trigger:template
+      input:
+        templateRef: template:default/template-2-service
+        values:
+          name: ${{ parameters.name }}-service
+          description: Dependent service for ${{ parameters.name }}
+          parentApp: ${{ parameters.name }}
+          repoUrl: github.com?owner=your-org&repo=${{ parameters.name }}-service
+        waitForCompletion: false
+    
+    - id: register-main
+      name: Register Main Application
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps['publish-main'].output.repoContentsUrl }}
+        catalogInfoPath: '/catalog-info.yaml'
+  
+  output:
+    links:
+      - title: Repository
+        url: ${{ steps['publish-main'].output.remoteUrl }}
+      - title: Open in catalog
+        icon: catalog
+        entityRef: ${{ steps['register-main'].output.entityRef }}
+      - title: Dependent Service Task
+        url: ${{ steps['trigger-dependent-service'].output.taskUrl }}
+        condition: ${{ parameters.createDependentService }}

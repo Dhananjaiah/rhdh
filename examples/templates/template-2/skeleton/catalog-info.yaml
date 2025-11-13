@@ -1,0 +1,22 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ${{ values.name }}
+  description: ${{ values.description }}
+  annotations:
+    github.com/project-slug: ${{ values.destination.owner }}/${{ values.destination.repo }}
+    backstage.io/techdocs-ref: dir:.
+  {% if values.parentApp %}
+  links:
+    - title: Parent Application
+      icon: dashboard
+      url: https://github.com/your-org/${{ values.parentApp }}
+  {% endif %}
+spec:
+  type: service
+  lifecycle: experimental
+  owner: platform-team
+  {% if values.parentApp %}
+  dependsOn:
+    - component:default/${{ values.parentApp }}
+  {% endif %}
